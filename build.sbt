@@ -15,6 +15,15 @@ libraryDependencies ++= Seq(
   // needed for scrooge https://twitter.github.io/scrooge/SBTPlugin.html
   "org.apache.thrift" % "libthrift" % "0.10.0",
   "com.twitter" %% "scrooge-core" % "20.12.0",
-  "com.twitter" %% "finagle-thrift" % "20.12.0"
+  "com.twitter" %% "finagle-thrift" % "20.12.0",
+
+  // needed for actor
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.8",
+
+  // convert to and from stuff (for example twitter future to scala future)
+  "com.twitter" %% "bijection-core" % "0.9.7",
+  "com.twitter" %% "bijection-util" % "0.9.7",
+  "com.twitter" %% "bijection-json" % "0.9.7",
+
 )
 
