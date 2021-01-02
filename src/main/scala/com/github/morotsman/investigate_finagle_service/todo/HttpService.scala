@@ -4,9 +4,9 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.github.morotsman.investigate_finagle_service.todo.ActorSystemInitializer.{Setup, SystemContext}
-import com.github.morotsman.investigate_finagle_service.todo.TodoActor.{CreateTodo, CreateTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos}
+import com.github.morotsman.investigate_finagle_service.todo.TodoActor.{CreateTodo, CreateTodoReply, DeleteTodo, DeleteTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos, ModifyTodo, ModifyTodoReply}
 import com.twitter.bijection.Conversion
-import com.twitter.finagle.http.{Method, Response, Status}
+import com.twitter.finagle.http.{Method, Request, Response, Status}
 import com.twitter.finagle.http.path.{/, Long, Path, Root}
 import com.twitter.finagle.{Http, ListeningServer, Service, http}
 import com.twitter.util.{Await, Future}
@@ -40,34 +40,43 @@ object HttpService extends App {
     case e@_ =>
       println("error: " + e)
       http.Response(Status.InternalServerError)
+  }
 
+  def withBody[A](req: Request)(handler: A => ScalaFuture[Try[Body]])(implicit ev: Conversion[String, Try[A]]) = {
+    req.contentString.as[Try[A]] match {
+      case Success(a) =>
+        handler(a)
+      case Failure(e) =>
+        ScalaFuture(Failure(new IllegalArgumentException(e)))
+    }
   }
 
   def service(context: SystemContext) = new Service[http.Request, http.Response] {
-    def apply(req: http.Request): Future[http.Response] = (Path(req.path) match {
+    def apply(req: Request): Future[http.Response] = (Path(req.path) match {
       case Root / "todo" =>
         req.method match {
           case Method.Get =>
             val result = context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
             result.map(reply => reply.todos.map(t => t.as[Body]))
           case Method.Post =>
-            req.contentString.as[Try[Todo]] match {
-              case Success(todo) =>
-                val result = context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
-                result.map(reply => reply.todo.map(t => t.as[Body]))
-              case Failure(e) =>
-                ScalaFuture(Failure(new IllegalArgumentException(e)))
+            withBody[Todo](req) { todo =>
+              val result = context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
+              result.map(reply => reply.todo.map(t => t.as[Body]))
             }
         }
       case Root / "todo" / Long(id) =>
         req.method match {
           case Method.Get =>
-            val result: ScalaFuture[GetTodoReply] = context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
+            val result = context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
             result.map(reply => reply.todo.map(t => t.as[Body]))
           case Method.Put =>
-            ???
+            withBody[Todo](req) { todo =>
+              val result = context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
+              result.map(reply => reply.todo.map(t => t.as[Body]))
+            }
           case Method.Delete =>
-            ???
+            val result = context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
+            result.map(reply => reply.todo.map(t => t.as[Body]))
         }
       case _ =>
         ScalaFuture(Failure(new NoSuchMethodError("Unknown method")))

@@ -10,7 +10,7 @@ object HttpClient extends App {
 
   def createTodoRequest(title: String): Request = {
     val createTodoRequest = http.Request(http.Method.Post, "/todo")
-    createTodoRequest.contentString = "{\"title2\":\"test\",\"completed\":false}"
+    createTodoRequest.contentString = "{\"title\":\"test\",\"completed\":false}"
     createTodoRequest
   }
 
@@ -19,8 +19,6 @@ object HttpClient extends App {
 
   def getTodoRequest(id: Long): Request =
     http.Request(http.Method.Get, s"/todo/$id")
-
-
 
   def printResponse(r: Response) = {
     println(s"Response: $r")
