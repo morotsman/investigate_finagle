@@ -51,32 +51,35 @@ object HttpService extends App {
     }
   }
 
+  def asBody[A](ta: Try[A])(implicit ev: Conversion[A, String]): Try[Body] =
+    ta.map(t => t.as[Body])
+
   def service(context: SystemContext) = new Service[http.Request, http.Response] {
     def apply(req: Request): Future[http.Response] = (Path(req.path) match {
       case Root / "todo" =>
         req.method match {
           case Method.Get =>
-            val result = context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
-            result.map(reply => reply.todos.map(t => t.as[Body]))
+            context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
+              .map(reply => asBody(reply.todos))
           case Method.Post =>
             withBody[Todo](req) { todo =>
-              val result = context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
-              result.map(reply => reply.todo.map(t => t.as[Body]))
+              context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
+                .map(reply => asBody(reply.todo))
             }
         }
       case Root / "todo" / Long(id) =>
         req.method match {
           case Method.Get =>
-            val result = context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
-            result.map(reply => reply.todo.map(t => t.as[Body]))
+            context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
+              .map(reply => asBody(reply.todo))
           case Method.Put =>
             withBody[Todo](req) { todo =>
-              val result = context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
-              result.map(reply => reply.todo.map(t => t.as[Body]))
+              context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
+                .map(reply => asBody(reply.todo))
             }
           case Method.Delete =>
-            val result = context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
-            result.map(reply => reply.todo.map(t => t.as[Body]))
+            context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
+              .map(reply => asBody(reply.todo))
         }
       case _ =>
         ScalaFuture(Failure(new NoSuchMethodError("Unknown method")))
