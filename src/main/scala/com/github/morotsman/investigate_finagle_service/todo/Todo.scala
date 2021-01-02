@@ -7,7 +7,7 @@ import org.codehaus.jackson.JsonNode
 
 import scala.util.Try
 
-case class Todo(id: Long, title: String, completed: Boolean)
+case class Todo(id: Option[Long], title: String, completed: Boolean)
 
 
 object Todo {
@@ -15,10 +15,18 @@ object Todo {
     Injection.build[Todo, Map[String, JsonNode]](todoToMap)(mapToTodo)
 
   private def mapToTodo(m: Map[String, JsonNode]): Try[Todo] =
-    Try(Todo(fromJsonNode[Long](m("id")).get, fromJsonNode[String](m("title")).get, fromJsonNode[Boolean](m("completed")).get))
+    Try(Todo(
+      m.get("id").map(id => fromJsonNode[Long](id).get),
+      fromJsonNode[String](m("title")).get,
+      fromJsonNode[Boolean](m("completed")).get
+    ))
 
   private def todoToMap(t: Todo): Map[String, JsonNode] =
-    Map("id" -> toJsonNode(t.id), "title" -> toJsonNode(t.title), "completed" -> toJsonNode(t.completed))
+    if (t.id.isDefined) {
+      Map("id" -> toJsonNode(t.id.get), "title" -> toJsonNode(t.title), "completed" -> toJsonNode(t.completed))
+    } else {
+      Map("title" -> toJsonNode(t.title), "completed" -> toJsonNode(t.completed))
+    }
 
   implicit val mapToString: Injection[Map[String, JsonNode], String] =
     JsonInjection.toString[Map[String, JsonNode]]
