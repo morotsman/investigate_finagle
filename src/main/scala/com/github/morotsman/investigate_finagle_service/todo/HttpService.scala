@@ -7,7 +7,7 @@ import com.github.morotsman.investigate_finagle_service.todo.ActorSystemInitiali
 import com.github.morotsman.investigate_finagle_service.todo.TodoActor.{CreateTodo, CreateTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos}
 import com.twitter.bijection.Conversion
 import com.twitter.finagle.http.{Method, Status}
-import com.twitter.finagle.http.path.{/, Path, Root}
+import com.twitter.finagle.http.path.{/, Long, Path, Root}
 import com.twitter.finagle.{Http, ListeningServer, Service, http}
 import com.twitter.util.{Await, Future}
 
@@ -39,25 +39,26 @@ object HttpService extends App {
           req.method match {
             case Method.Get =>
               val result = context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
-              Success(result.map(reply => toResponse(http.Status.Ok, reply.todos.get)))
+              result.map(reply => toResponse(http.Status.Ok, reply.todos.get))
             case Method.Post =>
-              val todo = req.contentString.as[Try[Todo]]
-              val result = context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo.get)) // TODO handle bad request
-              Success(result.map(reply => toResponse(http.Status.Ok, reply.todo.get)))
+              val todo = req.contentString.as[Try[Todo]] // TODO fix bad request
+              val result = context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo.get))
+              result.map(reply => toResponse(http.Status.Ok, reply.todo.get)) // TODO fix not found
           }
-        case Root / "todo" / id =>
-          Try(id.toLong).map(id => {
-            req.method match {
-              case Method.Get =>
-                val result: ScalaFuture[GetTodoReply] = context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id)) // TODO fix bad request
-                result.map(reply => toResponse(http.Status.Ok, reply.todo.get))
-              case Method.Put =>
-                ???
-              case Method.Delete =>
-                ???
-            }
-          })
-      }).getOrElse(ScalaFuture(http.Response(Status.BadRequest)))
+        case Root / "todo" / Long(id) =>
+          req.method match {
+            case Method.Get =>
+              val result: ScalaFuture[GetTodoReply] = context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
+              result.map(reply => toResponse(http.Status.Ok, reply.todo.get)) // TODO fix not found
+            case Method.Put =>
+              ???
+            case Method.Delete =>
+              ???
+          }
+        case _ =>
+          ScalaFuture(http.Response(Status.NotFound))
+
+      })
 
       response.as[Future[http.Response]]
     }
