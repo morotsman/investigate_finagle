@@ -1,9 +1,8 @@
-package com.github.morotsman.quickstart_finagle
+package com.github.morotsman.investigate_finagle_service.todo
 
-import com.twitter.finagle.{Http, Service}
-import com.twitter.finagle.http
 import com.twitter.finagle.http.{Request, Response}
-import com.twitter.util.{Await, Future}
+import com.twitter.finagle.{Http, Service, http}
+import com.twitter.util.Await
 
 object HttpClient extends App {
   val client: Service[http.Request, http.Response] = Http.newService("localhost:8080")
