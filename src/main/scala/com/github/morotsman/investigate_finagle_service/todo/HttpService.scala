@@ -25,35 +25,6 @@ object HttpService extends App {
   implicit val system: ActorSystem[Setup] =
     ActorSystem(ActorSystemInitializer.setup, "todo")
 
-  def toResponse(body: Try[Body]): http.Response = body match {
-    case Success(b) =>
-      val response = http.Response(Status.Ok)
-      response.setContentTypeJson()
-      response.contentString = b
-      response
-    case Failure(e: NoSuchMethodError) =>
-      http.Response(Status.NotFound)
-    case Failure(e: IllegalArgumentException) =>
-      http.Response(Status.BadRequest)
-    case Failure(e: NoSuchElementException) =>
-      http.Response(Status.NotFound)
-    case e@_ =>
-      println("error: " + e)
-      http.Response(Status.InternalServerError)
-  }
-
-  def withBody[A](req: Request)(handler: A => ScalaFuture[Try[Body]])(implicit ev: Conversion[String, Try[A]]) = {
-    req.contentString.as[Try[A]] match {
-      case Success(a) =>
-        handler(a)
-      case Failure(e) =>
-        ScalaFuture(Failure(new IllegalArgumentException(e)))
-    }
-  }
-
-  def asBody[A](ta: Try[A])(implicit ev: Conversion[A, String]): Try[Body] =
-    ta.map(t => t.as[Body])
-
   def service(context: SystemContext) = new Service[http.Request, http.Response] {
     def apply(req: Request): Future[http.Response] = (Path(req.path) match {
       case Root / "todo" =>
@@ -82,8 +53,37 @@ object HttpService extends App {
               .map(reply => asBody(reply.todo))
         }
       case _ =>
-        ScalaFuture(Failure(new NoSuchMethodError("Unknown method")))
+        ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
     }).map(toResponse).as[Future[http.Response]]
+  }
+
+  def asBody[A](ta: Try[A])(implicit ev: Conversion[A, String]): Try[Body] =
+    ta.map(t => t.as[Body])
+
+  def withBody[A](req: Request)(handler: A => ScalaFuture[Try[Body]])(implicit ev: Conversion[String, Try[A]]) = {
+    req.contentString.as[Try[A]] match {
+      case Success(a) =>
+        handler(a)
+      case Failure(e) =>
+        ScalaFuture(Failure(new IllegalArgumentException(e)))
+    }
+  }
+
+  def toResponse(body: Try[Body]): http.Response = body match {
+    case Success(b) =>
+      val response = http.Response(Status.Ok)
+      response.setContentTypeJson()
+      response.contentString = b
+      response
+    case Failure(e: NoSuchMethodError) =>
+      http.Response(Status.NotFound)
+    case Failure(e: IllegalArgumentException) =>
+      http.Response(Status.BadRequest)
+    case Failure(e: NoSuchElementException) =>
+      http.Response(Status.NotFound)
+    case e@_ =>
+      println("error: " + e)
+      http.Response(Status.InternalServerError)
   }
 
   implicit val timeout: Timeout = 3.seconds
