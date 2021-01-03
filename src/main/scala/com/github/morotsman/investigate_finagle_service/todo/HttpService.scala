@@ -25,41 +25,39 @@ object HttpService extends App {
   implicit val system: ActorSystem[Setup] =
     ActorSystem(ActorSystemInitializer.setup, "todo")
 
-  def service(context: SystemContext) = new Service[http.Request, http.Response] {
-    def apply(req: Request): Future[http.Response] = (Path(req.path) match {
-      case Root / "todo" =>
-        req.method match {
-          case Method.Get =>
-            context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
+  def service(context: SystemContext): Service[Request, Response] = (req: Request) => (Path(req.path) match {
+    case Root / "todo" =>
+      req.method match {
+        case Method.Get =>
+          context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
+            .map(asBody(_))
+        case Method.Post =>
+          withBody[Todo](req) { todo =>
+            context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
               .map(asBody(_))
-          case Method.Post =>
-            withBody[Todo](req) { todo =>
-              context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
-                .map(asBody(_))
-            }
-          case _ =>
-            ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
-        }
-      case Root / "todo" / Long(id) =>
-        req.method match {
-          case Method.Get =>
-            context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
+          }
+        case _ =>
+          ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
+      }
+    case Root / "todo" / Long(id) =>
+      req.method match {
+        case Method.Get =>
+          context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
+            .map(asBody(_))
+        case Method.Put =>
+          withBody[Todo](req) { todo =>
+            context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
               .map(asBody(_))
-          case Method.Put =>
-            withBody[Todo](req) { todo =>
-              context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
-                .map(asBody(_))
-            }
-          case Method.Delete =>
-            context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
-              .map(asBody(_))
-          case _ =>
-            ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
-        }
-      case _ =>
-        ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
-    }).map(toResponse).as[Future[http.Response]]
-  }
+          }
+        case Method.Delete =>
+          context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
+            .map(asBody(_))
+        case _ =>
+          ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
+      }
+    case _ =>
+      ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
+  }).map(toResponse).as[Future[http.Response]]
 
   def asBody[A](ta: Reply[A])(implicit ev: Conversion[A, String]): Try[Body] =
     ta.payload.map(t => t.as[Body])
