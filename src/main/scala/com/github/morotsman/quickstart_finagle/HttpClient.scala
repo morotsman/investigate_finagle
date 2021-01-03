@@ -14,11 +14,20 @@ object HttpClient extends App {
     createTodoRequest
   }
 
+  def modifyTodoRequest(id: Long, title: String, completed: Boolean): Request = {
+    val modifyTodoRequest = http.Request(http.Method.Put, s"/todo/$id")
+    modifyTodoRequest.contentString = "{\"title\":\"" +  title + "\", \"completed\":" + completed + "}"
+    modifyTodoRequest
+  }
+
   def getTodosRequest(): Request =
     http.Request(http.Method.Get, "/todo")
 
   def getTodoRequest(id: Long): Request =
     http.Request(http.Method.Get, s"/todo/$id")
+
+  def deleteTodoRequest(id: Long): Request =
+    http.Request(http.Method.Delete, s"/todo/$id")
 
   def printResponse(r: Response) = {
     println(s"Response: $r")
@@ -33,9 +42,14 @@ object HttpClient extends App {
     _ <- client(createTodoRequest("todo1")).onSuccess(printResponse).onFailure(printFailure)
     _ <- client(createTodoRequest("todo2")).onSuccess(printResponse).onFailure(printFailure)
     _ <- client(getTodosRequest()).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(getTodoRequest(1)).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(modifyTodoRequest(1, "todo2", true)).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(getTodoRequest(1)).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(getTodosRequest()).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(deleteTodoRequest(0)).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(getTodosRequest()).onSuccess(printResponse).onFailure(printFailure)
     _ <- client(getTodoRequest(0)).onSuccess(printResponse).onFailure(printFailure)
   }  yield ()
 
-  println("hepp")
   val tmp = Await.result(result)
 }

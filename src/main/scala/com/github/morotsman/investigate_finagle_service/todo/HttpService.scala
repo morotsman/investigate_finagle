@@ -4,7 +4,7 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.github.morotsman.investigate_finagle_service.todo.ActorSystemInitializer.{Setup, SystemContext}
-import com.github.morotsman.investigate_finagle_service.todo.TodoActor.{CreateTodo, CreateTodoReply, DeleteTodo, DeleteTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos, ModifyTodo, ModifyTodoReply}
+import com.github.morotsman.investigate_finagle_service.todo.TodoActor.{CreateTodo, CreateTodoReply, DeleteTodo, DeleteTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos, ModifyTodo, ModifyTodoReply, Reply}
 import com.twitter.bijection.Conversion
 import com.twitter.finagle.http.{Method, Request, Response, Status}
 import com.twitter.finagle.http.path.{/, Long, Path, Root}
@@ -31,34 +31,36 @@ object HttpService extends App {
         req.method match {
           case Method.Get =>
             context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
-              .map(reply => asBody(reply.todos))
+              .map(asBody(_))
           case Method.Post =>
             withBody[Todo](req) { todo =>
               context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
-                .map(reply => asBody(reply.todo))
+                .map(asBody(_))
             }
         }
       case Root / "todo" / Long(id) =>
         req.method match {
           case Method.Get =>
             context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
-              .map(reply => asBody(reply.todo))
+              .map(asBody(_))
           case Method.Put =>
             withBody[Todo](req) { todo =>
               context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
-                .map(reply => asBody(reply.todo))
+                .map(asBody(_))
             }
           case Method.Delete =>
             context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
-              .map(reply => asBody(reply.todo))
+              .map(asBody(_))
+          case _ =>
+            ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
         }
       case _ =>
         ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
     }).map(toResponse).as[Future[http.Response]]
   }
 
-  def asBody[A](ta: Try[A])(implicit ev: Conversion[A, String]): Try[Body] =
-    ta.map(t => t.as[Body])
+  def asBody[A](ta: Reply[A])(implicit ev: Conversion[A, String]): Try[Body] =
+    ta.payload.map(t => t.as[Body])
 
   def withBody[A](req: Request)(handler: A => ScalaFuture[Try[Body]])(implicit ev: Conversion[String, Try[A]]) = {
     req.contentString.as[Try[A]] match {
@@ -76,10 +78,13 @@ object HttpService extends App {
       response.contentString = b
       response
     case Failure(e: NoSuchMethodError) =>
+      println(e)
       http.Response(Status.NotFound)
     case Failure(e: IllegalArgumentException) =>
+      println(e)
       http.Response(Status.BadRequest)
     case Failure(e: NoSuchElementException) =>
+      println(e)
       http.Response(Status.NotFound)
     case e@_ =>
       println("error: " + e)

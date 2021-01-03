@@ -19,17 +19,19 @@ object TodoActor {
 
   case class DeleteTodo(replyTo: ActorRef[DeleteTodoReply], id: Long) extends Request
 
-  sealed trait Reply
+  sealed trait Reply[A] {
+    val payload: Try[A]
+  }
 
-  case class GetTodosReply(todos: Try[List[Todo]]) extends Reply
+  case class GetTodosReply(payload: Try[List[Todo]]) extends Reply[List[Todo]]
 
-  case class CreateTodoReply(todo: Try[Todo]) extends Reply
+  case class CreateTodoReply(payload: Try[Todo]) extends Reply[Todo]
 
-  case class GetTodoReply(todo: Try[Todo]) extends Reply
+  case class GetTodoReply(payload: Try[Todo]) extends Reply[Todo]
 
-  case class ModifyTodoReply(todo: Try[Todo]) extends Reply
+  case class ModifyTodoReply(payload: Try[Todo]) extends Reply[Todo]
 
-  case class DeleteTodoReply(todo: Try[Todo]) extends Reply
+  case class DeleteTodoReply(payload: Try[Todo]) extends Reply[Todo]
 
   def apply(): Behavior[Request] = {
     behave(0L, Map[Long, Todo]())
@@ -38,7 +40,7 @@ object TodoActor {
   def behave(currentId: Long, todos: Map[Long, Todo]): Behavior[Request] = Behaviors.receive { (context, message) =>
     message match {
       case ListTodos(replyTo) =>
-        replyTo ! GetTodosReply(Try(todos.values.toList))
+        replyTo ! GetTodosReply(Try(todos.values.toList.sortBy(t => t.id.get)))
         Behaviors.same
       case CreateTodo(replyTo, todo) =>
         val newTodo = todo.copy(id = Some(currentId))
@@ -49,7 +51,8 @@ object TodoActor {
         replyTo ! GetTodoReply(todo)
         Behaviors.same
       case ModifyTodo(replyTo, id, todo) =>
-        val newTodo = Try(todos(id)).map(t => t.copy(title = todo.title, completed = todo.completed))
+        val newTodo = Try(todos(id)).map(_.copy(title = todo.title, completed = todo.completed))
+        println(newTodo)
         replyTo ! ModifyTodoReply(newTodo)
         newTodo match {
           case Success(t) =>
