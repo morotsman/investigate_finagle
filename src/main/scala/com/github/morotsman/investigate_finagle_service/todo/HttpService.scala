@@ -37,6 +37,8 @@ object HttpService extends App {
               context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
                 .map(asBody(_))
             }
+          case _ =>
+            ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))
         }
       case Root / "todo" / Long(id) =>
         req.method match {
