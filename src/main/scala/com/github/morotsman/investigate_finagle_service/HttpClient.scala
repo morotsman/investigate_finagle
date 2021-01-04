@@ -48,6 +48,8 @@ object HttpClient extends App {
     _ <- client(deleteTodoRequest(0)).onSuccess(printResponse).onFailure(printFailure)
     _ <- client(getTodosRequest()).onSuccess(printResponse).onFailure(printFailure)
     _ <- client(getTodoRequest(0)).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(modifyTodoRequest(0, "todo2", true)).onSuccess(printResponse).onFailure(printFailure)
+    _ <- client(deleteTodoRequest(0)).onSuccess(printResponse).onFailure(printFailure)
   }  yield ()
 
   val tmp = Await.result(result)
