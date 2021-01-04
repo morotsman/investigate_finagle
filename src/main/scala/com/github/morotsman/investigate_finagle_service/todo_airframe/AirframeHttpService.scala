@@ -6,10 +6,8 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.github.morotsman.investigate_finagle_service.todo_airframe.ActorSystemInitializer.{Setup, SystemContext}
 import com.github.morotsman.investigate_finagle_service.todo_airframe.TodoActor.{CreateTodo, CreateTodoReply, DeleteTodo, DeleteTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos, ModifyTodo, ModifyTodoReply}
-import com.sun.activation.registries.LogSupport
 import com.twitter.bijection.Conversion.asMethod
 import com.twitter.util.Future
-import wvlet.airframe._
 import wvlet.airframe.http.finagle.{Finagle, FinagleFilter, FinagleServer}
 import wvlet.airframe.http.{Endpoint, Http, HttpMethod, Router}
 
