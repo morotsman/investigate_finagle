@@ -1,4 +1,4 @@
-package com.github.morotsman.investigate_finagle_service.todo
+package com.github.morotsman.investigate_finagle_service.todo_finagle
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors

@@ -1,8 +1,8 @@
-package com.github.morotsman.investigate_finagle_service.todo
+package com.github.morotsman.investigate_finagle_service.todo_airframe
 
-import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import com.github.morotsman.investigate_finagle_service.todo.TodoActor.Request
+import akka.actor.typed.{ActorRef, Behavior}
+import com.github.morotsman.investigate_finagle_service.todo_airframe.TodoActor.Request
 
 object ActorSystemInitializer {
 

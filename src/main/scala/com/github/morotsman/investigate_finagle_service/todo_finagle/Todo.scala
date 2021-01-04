@@ -1,4 +1,4 @@
-package com.github.morotsman.investigate_finagle_service.todo
+package com.github.morotsman.investigate_finagle_service.todo_finagle
 
 import com.twitter.bijection.Injection
 import com.twitter.bijection.json.JsonInjection

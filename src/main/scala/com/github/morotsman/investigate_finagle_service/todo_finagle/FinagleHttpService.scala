@@ -1,10 +1,10 @@
-package com.github.morotsman.investigate_finagle_service.todo
+package com.github.morotsman.investigate_finagle_service.todo_finagle
 
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.util.Timeout
-import com.github.morotsman.investigate_finagle_service.todo.ActorSystemInitializer.{Setup, SystemContext}
-import com.github.morotsman.investigate_finagle_service.todo.TodoActor.{CreateTodo, CreateTodoReply, DeleteTodo, DeleteTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos, ModifyTodo, ModifyTodoReply, Reply}
+import com.github.morotsman.investigate_finagle_service.todo_finagle.ActorSystemInitializer.{Setup, SystemContext}
+import com.github.morotsman.investigate_finagle_service.todo_finagle.TodoActor.{CreateTodo, CreateTodoReply, DeleteTodo, DeleteTodoReply, GetTodo, GetTodoReply, GetTodosReply, ListTodos, ModifyTodo, ModifyTodoReply, Reply}
 import com.twitter.bijection.Conversion
 import com.twitter.finagle.http.{Method, Request, Response, Status}
 import com.twitter.finagle.http.path.{/, Long, Path, Root}
@@ -18,7 +18,7 @@ import com.twitter.bijection.twitter_util.UtilBijections._
 
 import scala.util.{Failure, Success, Try}
 
-object HttpService extends App {
+object FinagleHttpService extends App {
 
   type Body = String
 
@@ -29,11 +29,13 @@ object HttpService extends App {
     case Root / "todo" =>
       req.method match {
         case Method.Get =>
-          context.todoActor.ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
+          context.todoActor
+            .ask((ref: ActorRef[GetTodosReply]) => ListTodos(ref))
             .map(asBody(_))
         case Method.Post =>
           withBody[Todo](req) { todo =>
-            context.todoActor.ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
+            context.todoActor
+              .ask((ref: ActorRef[CreateTodoReply]) => CreateTodo(ref, todo))
               .map(asBody(_))
           }
         case _ =>
@@ -42,15 +44,18 @@ object HttpService extends App {
     case Root / "todo" / Long(id) =>
       req.method match {
         case Method.Get =>
-          context.todoActor.ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
+          context.todoActor
+            .ask((ref: ActorRef[GetTodoReply]) => GetTodo(ref, id))
             .map(asBody(_))
         case Method.Put =>
           withBody[Todo](req) { todo =>
-            context.todoActor.ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
+            context.todoActor
+              .ask((ref: ActorRef[ModifyTodoReply]) => ModifyTodo(ref, id, todo))
               .map(asBody(_))
           }
         case Method.Delete =>
-          context.todoActor.ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
+          context.todoActor
+            .ask((ref: ActorRef[DeleteTodoReply]) => DeleteTodo(ref, id))
             .map(asBody(_))
         case _ =>
           ScalaFuture(Failure(new NoSuchMethodError(s"Unknown resource: ${req.path}")))

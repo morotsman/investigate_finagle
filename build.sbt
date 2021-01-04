@@ -25,5 +25,8 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "bijection-util" % "0.9.7",
   "com.twitter" %% "bijection-json" % "0.9.7",
 
+  //
+  "org.wvlet.airframe" %% "airframe-http-finagle" % "21.1.0"
+
 )
 
