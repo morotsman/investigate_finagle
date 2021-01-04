@@ -1,6 +1,5 @@
 package com.github.morotsman.investigate_finagle_service.todo_airframe
 
-import akka.actor.FSM.Failure
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.util.Timeout
