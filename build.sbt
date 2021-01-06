@@ -25,8 +25,20 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "bijection-util" % "0.9.7",
   "com.twitter" %% "bijection-json" % "0.9.7",
 
-  //
-  "org.wvlet.airframe" %% "airframe-http-finagle" % "21.1.0"
+  // airframe
+  "org.wvlet.airframe" %% "airframe-http-finagle" % "21.1.0",
+
+  // finch
+  "com.github.finagle" %% "finchx-core" % "0.32.0",
+  "com.github.finagle" %% "finchx-circe" % "0.32.0",
+  "io.circe" %% "circe-generic" % "0.13.0",
+
+  // cats
+  "org.typelevel" %% "cats-core" % "2.1.1",
+  "org.typelevel" %% "cats-effect" % "2.1.1",
+
+  // Twitter server
+  "com.twitter" %% "twitter-server" % "20.12.0",
 
 )
 
