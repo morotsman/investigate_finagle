@@ -40,5 +40,9 @@ libraryDependencies ++= Seq(
   // Twitter server
   "com.twitter" %% "twitter-server" % "20.12.0",
 
+  // Test
+  "org.scalatest" %% "scalatest" % "3.2.3" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.15.2" % "test"
+
 )
 

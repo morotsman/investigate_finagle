@@ -60,7 +60,5 @@ class App(
 
   final def toService: Service[Request, Response] = Bootstrap
     .serve[Application.Json](createMachine :+: getMachines :+: insertCoin :+: turn)
-    .serve[Text.Html](classpathAsset("/todo/index.html"))
-    .serve[Application.Javascript](classpathAsset("/todo/main.js"))
     .toService
 }
