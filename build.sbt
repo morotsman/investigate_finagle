@@ -42,7 +42,8 @@ libraryDependencies ++= Seq(
 
   // Test
   "org.scalatest" %% "scalatest" % "3.2.3" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.15.2" % "test"
+  "org.scalacheck" %% "scalacheck" % "1.15.2" % "test",
+  "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2" % "test"
 
 )
 

@@ -31,7 +31,6 @@ class App(
     storeRef.get.map(m => Ok(m.values.toList.sortBy(_.id)))
   }
 
-
   final val insertCoin: Endpoint[IO, MachineState] = put(path("machine") :: path[Int] :: path("coin")) {
     handleInput(Coin)
   }

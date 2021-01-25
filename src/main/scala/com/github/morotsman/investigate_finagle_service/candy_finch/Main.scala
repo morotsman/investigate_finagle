@@ -11,7 +11,7 @@ import com.twitter.util.Await
 
 object Main extends TwitterServer {
 
-  private val port: Flag[Int] = flag("port", 8080, "TCP port for HTTP server")
+  private val port: Flag[Int] = flag("port", 9080, "TCP port for HTTP server")
 
   def main(): Unit = {
 
