@@ -7,6 +7,7 @@ import com.twitter.finagle.http.{Request, Response, Status}
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import shapeless.HNil
 
 
 class App(
@@ -20,6 +21,8 @@ class App(
   final val assignId: Endpoint[IO, MachineState] =
     jsonBody[Int => MachineState].mapAsync(pt => idRef.modify(id => (id + 1, pt(id))))
 
+  final val assignIdVerbode: Endpoint[IO, MachineState] =
+    jsonBody[Int => MachineState].mapAsync((pt: Int => MachineState) => idRef.modify(id => (id + 1, pt(id))))
 
   final val createMachine: Endpoint[IO, MachineState] = post(path("machine") :: assignId) { m: MachineState =>
     storeRef.modify { store =>
@@ -31,11 +34,20 @@ class App(
     storeRef.get.map(m => Ok(m.values.toList.sortBy(_.id)))
   }
 
+  final val getMachinesVerbose: Endpoint[IO, List[MachineState]] = {
+    val endPoint: Endpoint.Mappable[IO, HNil] = get(path("machine2"))
+    val result: Endpoint[IO, List[MachineState]] = endPoint {
+      val mapResult: IO[Output[List[MachineState]]] = storeRef.get.map(m => Ok(m.values.toList.sortBy(_.id)))
+      mapResult
+    }
+    result
+  }
+
   final val insertCoin: Endpoint[IO, MachineState] = put(path("machine") :: path[Int] :: path("coin")) {
     handleInput(Coin)
   }
 
-  private def handleInput(input: Input) = {
+  private def handleInput(input: Input): Int => IO[Output[MachineState]] = {
     id: Int => {
       storeRef.modify { store =>
         val result = for {

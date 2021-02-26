@@ -12,7 +12,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.Checkers._
 
-class AppTestxw extends AnyFlatSpec with Matchers {
+class AppTest extends AnyFlatSpec with Matchers {
 
 
   private case class AppState(id: Int, store: Map[Int, MachineState])
@@ -40,7 +40,7 @@ class AppTestxw extends AnyFlatSpec with Matchers {
   private def genTestApp: Gen[TestApp] =
     Gen.listOf(genMachineWithoutId).map { machines =>
       val id = machines.length
-      val store = machines.zipWithIndex.map { case (t, i) => i -> t.withId(i) }
+      val store = machines.zipWithIndex.map { case (m, i) => i -> m.withId(i) }
 
       TestApp(Ref.unsafe[IO, Int](id), Ref.unsafe[IO, Map[Int, MachineState]](store.toMap))
     }
@@ -53,7 +53,7 @@ class AppTestxw extends AnyFlatSpec with Matchers {
     check { (app: TestApp, machine: MachineWithoutId) =>
       val input = Input.post("/machine").withBody[Application.Json](machine)
 
-      val shouldBeTrue = for {
+      val shouldBeTrue: IO[Boolean] = for {
         prev <- app.state
         newMachine <- app.createMachine(input).output.get
         next <- app.state
@@ -73,14 +73,21 @@ class AppTestxw extends AnyFlatSpec with Matchers {
         prev <- app.state
         machines <- app.getMachines(input).output.get
         next <- app.state
-      } yield {
-        validateNoChange(prev, next) &&
-          machines.value == prev.store.values.toList.sortBy(_.id)
-      }
+      } yield
+        stateUnChanged(prev, next) && machines.value == prev.store.values.toList.sortBy(_.id)
 
       shouldBeTrue.unsafeRunSync()
     }
   }
+
+  private def stateUnChanged(prev: AppState, next: AppState): Boolean =
+    sameId(prev, next) && storeSame(prev, next)
+
+  private def sameId(prev: AppState, next: AppState): Boolean =
+    prev.id == next.id
+
+  private def storeSame(prev: AppState, next: AppState): Boolean =
+    prev.store == next.store
 
   it should "accept coins" in {
     check { (app: TestApp) =>
@@ -91,45 +98,37 @@ class AppTestxw extends AnyFlatSpec with Matchers {
         prev <- app.state
         result <- app.insertCoin(input).output.get
         next <- app.state
-      } yield {
-        (result.status == Status.NotFound && validateNoChange(prev, next)) && validateNotFound(id, prev)||
-          (result.status == Status.BadRequest && validateNoChange(prev, next)) && validateBadRequest(id, prev, Coin) ||
-          (result.status == Status.Ok && validateUnlocked(id, prev, next))
-      }
+      } yield result.status match {
+          case Status.NotFound =>
+            stateUnChanged(prev, next) && machineUnknown(id, prev)
+          case Status.BadRequest =>
+            stateUnChanged(prev, next) && machineInWrongState(id, prev, Coin)
+          case Status.Ok =>
+            isUnlocked(id, prev, next)
+          case _ => false
+        }
 
       shouldBeTrue.unsafeRunSync()
     }
   }
 
-  private def validateNoChange(prev: AppState, next: AppState): Boolean =
-    validateIdSame(prev, next) && validateStoreSame(prev, next)
-
-  private def validateStoreSame(prev: AppState, next: AppState): Boolean =
-    prev.store == next.store
-
-  private def validateIdSame(prev: AppState, next: AppState): Boolean =
-    prev.id == next.id
-
-  def validateNotFound(id: Int, prev: AppState): Boolean =
+  def machineUnknown(id: Int, prev: AppState): Boolean =
     prev.store.get(id).isEmpty
 
-  def validateBadRequest(id: Int, prev: AppState, command: Input): Boolean = command match {
+  def machineInWrongState(id: Int, prev: AppState, command: Input): Boolean = command match {
     case Turn =>
       prev.store(id).locked || prev.store(id).candies <= 0
     case Coin =>
       !prev.store(id).locked || prev.store(id).candies <= 0
   }
 
-  def validateUnlocked(id: Int, prev: AppState, next: AppState): Boolean = (for {
-    pm <- prev.store.get(id)
-    nm <- next.store.get(id)
-    if pm.locked
-    if !nm.locked
-    if pm.candies > 0
-    if nm.candies == pm.candies
-    if nm.coins == pm.coins + 1
-    if (validateIdSame(prev, next))
-    if (prev.store.filter(kv => kv._1 != id) == next.store.filter(kv => kv._1 != id))
+  def isUnlocked(id: Int, prevState: AppState, nextState: AppState): Boolean = (for {
+    prev <- prevState.store.get(id)
+    next <- nextState.store.get(id)
+    if (prev.locked && !next.locked)
+    if (prev.candies > 0 && next.candies == prev.candies && next.coins == prev.coins + 1)
+    if sameId(prevState, nextState)
+    if (prevState.store.filter(kv => kv._1 != id) == nextState.store.filter(kv => kv._1 != id))
   } yield true).getOrElse(false)
 
   it should "turn" in {
@@ -141,25 +140,27 @@ class AppTestxw extends AnyFlatSpec with Matchers {
         prev <- app.state
         result <- app.turn(input).output.get
         next <- app.state
-      } yield {
-        (result.status == Status.NotFound && validateNoChange(prev, next)) && validateNotFound(id, prev) ||
-          (result.status == Status.BadRequest && validateNoChange(prev, next) && validateBadRequest(id, prev, Turn)) ||
-          (result.status == Status.Ok && validateReturnCandy(id, prev, next))
+      } yield result.status match {
+        case Status.NotFound =>
+          stateUnChanged(prev, next) && machineUnknown(id, prev)
+        case Status.BadRequest =>
+          stateUnChanged(prev, next) && machineInWrongState(id, prev, Turn)
+        case Status.Ok =>
+          returnsCandy(id, prev, next)
+        case _ => false
       }
 
       shouldBeTrue.unsafeRunSync()
     }
   }
 
-  def validateReturnCandy(id: Int, prev: AppState, next: AppState): Boolean = (for {
-    pm <- prev.store.get(id)
-    nm <- next.store.get(id)
-    if !pm.locked
-    if nm.locked
-    if pm.candies - 1 == nm.candies
-    if pm.coins == nm.coins
-    if validateIdSame(prev, next)
-    if (prev.store.filter(kv => kv._1 != id) == next.store.filter(kv => kv._1 != id))
+  def returnsCandy(id: Int, prevState: AppState, nextState: AppState): Boolean = (for {
+    prev <- prevState.store.get(id)
+    next <- nextState.store.get(id)
+    if (!prev.locked && next.locked)
+    if (prev.candies - 1 == next.candies && prev.coins == next.coins)
+    if sameId(prevState, nextState)
+    if (prevState.store.filter(kv => kv._1 != id) == nextState.store.filter(kv => kv._1 != id))
   } yield true).getOrElse(false)
 
 }
