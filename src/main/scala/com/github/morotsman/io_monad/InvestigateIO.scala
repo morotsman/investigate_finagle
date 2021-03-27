@@ -20,20 +20,32 @@ object InvestigateIO extends App {
   program1.unsafeRunSync()
 
 
-  def guessTheNumber(answer: Int): Unit = {
+  trait Console {
+    def printLn(s: String): Unit
+    def readLine(): String
+  }
+
+  class ConsoleImpl extends Console {
+    override def printLn(s: String): Unit = println(s)
+
+    override def readLine(): String = scala.io.StdIn.readLine()
+  }
+
+
+  def guessTheNumber(console: Console)(answer: Int): Unit = {
 
     @tailrec
     def loop(numberOfGuesses: Int): Unit = {
-      println("Guess of a number between 0 and 1000: ")
-      val line = scala.io.StdIn.readLine()
+      console.printLn("Guess of a number between 0 and 1000: ")
+      val line = console.readLine()
       val guess = line.toInt
       if (guess == answer) {
-        println(s"You are correct, the number is: $answer. You got it in $numberOfGuesses guesses.")
+        console.printLn(s"You are correct, the number is: $answer. You got it in $numberOfGuesses guesses.")
       } else if (guess < answer) {
-        println(s"Your guess is too low.")
+        console.printLn(s"Your guess is too low.")
         loop(numberOfGuesses + 1)
       } else {
-        println(s"Your guess is too high.")
+        console.printLn(s"Your guess is too high.")
         loop(numberOfGuesses + 1)
       }
     }
@@ -42,17 +54,17 @@ object InvestigateIO extends App {
   }
 
   val rnd = new scala.util.Random()
-  // val test: Unit = guessTheNumber(rnd.nextInt(1001))
+  val test: Unit = guessTheNumber(new ConsoleImpl)(rnd.nextInt(1001))
 
 
-  def guessTheNumberWithIO(answer: Int): IO[Unit] = {
+  def guessTheNumberWithIO(console: Console)(answer: Int): IO[Unit] = {
 
     def printLn(s: String): IO[Unit] = IO {
-      println(s)
+      console.printLn(s)
     }
 
     def readLn(): IO[String] = IO {
-      scala.io.StdIn.readLine()
+      console.readLine()
     }
 
     def loop(numberOfGuesses: Int): IO[Unit] = for {
@@ -74,7 +86,7 @@ object InvestigateIO extends App {
     loop(1)
   }
 
-  val program2: IO[Unit] = guessTheNumberWithIO(rnd.nextInt(1001))
-  program2.unsafeRunSync()
+  val program2: IO[Unit] = guessTheNumberWithIO(new ConsoleImpl)(rnd.nextInt(1001))
+  // program2.unsafeRunSync()
 
 }
