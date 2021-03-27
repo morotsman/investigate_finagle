@@ -68,9 +68,9 @@ object InvestigateIO extends App {
     }
 
     def loop(numberOfGuesses: Int): IO[Unit] = for {
-      g <- printLn("Guess of a number between 0 and 1000: ") >> readLn()
+      line <- printLn("Guess of a number between 0 and 1000: ") >> readLn()
       _ <- {
-        val guess = g.toInt
+        val guess = line.toInt
         if (guess == answer) {
           printLn(s"You are correct, the number is: $answer. You got it in $numberOfGuesses guesses.")
         } else if (guess < answer) {
