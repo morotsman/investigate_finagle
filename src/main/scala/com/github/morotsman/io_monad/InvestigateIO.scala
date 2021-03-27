@@ -54,7 +54,7 @@ object InvestigateIO extends App {
   }
 
   val rnd = new scala.util.Random()
-  val test: Unit = guessTheNumber(new ConsoleImpl)(rnd.nextInt(1001))
+  // val test: Unit = guessTheNumber(new ConsoleImpl)(rnd.nextInt(1001))
 
 
   def guessTheNumberWithIO(console: Console)(answer: Int): IO[Unit] = {
@@ -68,8 +68,7 @@ object InvestigateIO extends App {
     }
 
     def loop(numberOfGuesses: Int): IO[Unit] = for {
-      _ <- printLn("Guess of a number between 0 and 1000: ")
-      g <- readLn()
+      g <- printLn("Guess of a number between 0 and 1000: ") >> readLn()
       _ <- {
         val guess = g.toInt
         if (guess == answer) {
@@ -80,13 +79,12 @@ object InvestigateIO extends App {
           printLn(s"Your guess is too high.") >> loop(numberOfGuesses + 1)
         }
       }
-
     } yield ()
 
     loop(1)
   }
 
   val program2: IO[Unit] = guessTheNumberWithIO(new ConsoleImpl)(rnd.nextInt(1001))
-  // program2.unsafeRunSync()
+  program2.unsafeRunSync()
 
 }
