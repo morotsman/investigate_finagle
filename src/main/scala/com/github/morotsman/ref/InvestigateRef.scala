@@ -2,8 +2,12 @@ package com.github.morotsman.ref
 
 import cats.effect.IO
 import cats.effect.concurrent.Ref
+import scala.concurrent.ExecutionContext
+import cats.implicits._
 
 object InvestigateRef extends App {
+  implicit val ctx = IO.contextShift(ExecutionContext.global)
+
   def printLn(s: String): IO[Unit] = IO(println(s"${Thread.currentThread()}: $s"))
 
   def addOne(ref: Ref[IO, Int]): IO[Unit] = for {
@@ -30,11 +34,25 @@ object InvestigateRef extends App {
   program1(myRef).unsafeRunSync()
 
   def program2(ref: IO[Ref[IO, Int]]): IO[Unit] = for {
-    ref1 <- ref
-    _ <- program1(ref1)
+    r <- ref
+    _ <- program1(r)
   } yield ()
 
   val myRef2: IO[Ref[IO, Int]] = Ref[IO].of(42)
   program2(myRef2).unsafeRunSync()
   program2(myRef2).unsafeRunSync()
+
+
+    def program3(ref: IO[Ref[IO, Int]]): IO[Unit] = for {
+      r <- ref
+      _ <- List(
+        addOne(r),
+        addOne(r),
+        addOne(r)
+      ).parSequence
+    } yield ();
+
+    program3(myRef2).unsafeRunSync()
+
+
 }
