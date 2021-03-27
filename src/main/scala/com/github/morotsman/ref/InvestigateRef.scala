@@ -26,10 +26,9 @@ object InvestigateRef extends App {
     _ <- addOne(ref)
     _ <- addOne(ref)
     _ <- addOne(ref)
-    _ <- printLn("***********************************")
   } yield ()
 
-  val myRef: Ref[IO, Int] = Ref.unsafe[IO,Int](42)
+  val myRef: Ref[IO, Int] = Ref.unsafe[IO, Int](42)
   program1(myRef).unsafeRunSync()
   program1(myRef).unsafeRunSync()
 
@@ -43,16 +42,16 @@ object InvestigateRef extends App {
   program2(myRef2).unsafeRunSync()
 
 
-    def program3(ref: IO[Ref[IO, Int]]): IO[Unit] = for {
-      r <- ref
-      _ <- List(
-        addOne(r),
-        addOne(r),
-        addOne(r)
-      ).parSequence
-    } yield ();
+  def program3(ref: IO[Ref[IO, Int]]): IO[Unit] = for {
+    r <- ref
+    _ <- List(
+      addOne(r),
+      addOne(r),
+      addOne(r)
+    ).parSequence
+  } yield ();
 
-    program3(myRef2).unsafeRunSync()
+  program3(myRef2).unsafeRunSync()
 
 
 }
