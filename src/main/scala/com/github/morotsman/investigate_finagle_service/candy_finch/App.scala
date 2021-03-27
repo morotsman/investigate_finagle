@@ -35,7 +35,7 @@ class App(
   }
 
   final val getMachinesVerbose: Endpoint[IO, List[MachineState]] = {
-    val endPoint: Endpoint.Mappable[IO, HNil] = get(path("machine2"))
+      val endPoint: Endpoint.Mappable[IO, HNil] = get(path("machine2"))
     val result: Endpoint[IO, List[MachineState]] = endPoint {
       val mapResult: IO[Output[List[MachineState]]] = storeRef.get.map(m => Ok(m.values.toList.sortBy(_.id)))
       mapResult
@@ -49,19 +49,22 @@ class App(
 
   private def handleInput(input: Input): Int => IO[Output[MachineState]] = {
     id: Int => {
-      storeRef.modify { store =>
-        val result = for {
-          machine <- store.get(id).toRight(new NoSuchElementException)
-          newMachine <- CandyRule.applyRule(input)(machine)
-        } yield (newMachine)
-
-        result match {
-          case Right(m) => (store + (id -> m), Ok(m))
-          case Left(e: NoSuchElementException) => (store, Output.empty(Status.NotFound))
-          case Left(e: IllegalStateException) => (store, Output.empty(Status.BadRequest))
-        }
-      }
+      storeRef.modify { updateMachineState(input, id)}
     }
+  }
+
+  private def updateMachineState(input: Input, id: Int): Map[Int, MachineState] => (Map[Int, MachineState], Output[MachineState]) = {
+    store: Map[Int, MachineState] =>
+      val result = for {
+        machine <- store.get(id).toRight(new NoSuchElementException)
+        newMachine <- CandyRule.applyRule(input)(machine)
+      } yield (newMachine)
+
+      result match {
+        case Right(m) => (store + (id -> m), Ok(m))
+        case Left(e: NoSuchElementException) => (store, Output.empty(Status.NotFound))
+        case Left(e: IllegalStateException) => (store, Output.empty(Status.BadRequest))
+      }
   }
 
   final val turn: Endpoint[IO, MachineState] = put("machine" :: path[Int] :: "turn") {
