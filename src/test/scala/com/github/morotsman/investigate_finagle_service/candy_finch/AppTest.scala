@@ -14,7 +14,6 @@ import org.scalatestplus.scalacheck.Checkers._
 
 class AppTest extends AnyFlatSpec with Matchers {
 
-
   private case class AppState(id: Int, store: Map[Int, MachineState])
 
   private case class TestApp(

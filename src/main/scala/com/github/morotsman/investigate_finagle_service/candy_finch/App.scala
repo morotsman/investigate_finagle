@@ -21,9 +21,6 @@ class App(
   final val assignId: Endpoint[IO, MachineState] =
     jsonBody[Int => MachineState].mapAsync(pt => idRef.modify(id => (id + 1, pt(id))))
 
-  final val assignIdVerbode: Endpoint[IO, MachineState] =
-    jsonBody[Int => MachineState].mapAsync((pt: Int => MachineState) => idRef.modify(id => (id + 1, pt(id))))
-
   final val createMachine: Endpoint[IO, MachineState] = post(path("machine") :: assignId) { m: MachineState =>
     storeRef.modify { store =>
       (store + (m.id -> m), Created(m))
@@ -32,15 +29,6 @@ class App(
 
   final val getMachines: Endpoint[IO, List[MachineState]] = get(path("machine")) {
     storeRef.get.map(m => Ok(m.values.toList.sortBy(_.id)))
-  }
-
-  final val getMachinesVerbose: Endpoint[IO, List[MachineState]] = {
-      val endPoint: Endpoint.Mappable[IO, HNil] = get(path("machine2"))
-    val result: Endpoint[IO, List[MachineState]] = endPoint {
-      val mapResult: IO[Output[List[MachineState]]] = storeRef.get.map(m => Ok(m.values.toList.sortBy(_.id)))
-      mapResult
-    }
-    result
   }
 
   final val insertCoin: Endpoint[IO, MachineState] = put(path("machine") :: path[Int] :: path("coin")) {
@@ -70,7 +58,6 @@ class App(
   final val turn: Endpoint[IO, MachineState] = put("machine" :: path[Int] :: "turn") {
     handleInput(Turn)
   }
-
 
   final def toService: Service[Request, Response] = Bootstrap
     .serve[Application.Json](createMachine :+: getMachines :+: insertCoin :+: turn)
