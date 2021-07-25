@@ -25,7 +25,7 @@ class CreateOrderImpl[F[_]](
     totalCost = costForOrder(order)
     isVip = vipAndCredit._1
     credit = vipAndCredit._2
-    o <- if (totalCost < credit.limit) {
+    o <- if (totalCost <= credit.limit) {
       createOrder(
         freeDelivery = isVip || totalCost >= freeLimit,
         order
