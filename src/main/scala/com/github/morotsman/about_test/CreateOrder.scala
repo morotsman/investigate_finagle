@@ -5,7 +5,7 @@ import cats.implicits._
 import scala.language.higherKinds
 
 trait CreateOrder[F[_]] {
-  val freeLimit = 1000L
+  val freeLimit = 100L
 
   def apply(order: Order): F[Either[BusinessError, Order]]
 }
