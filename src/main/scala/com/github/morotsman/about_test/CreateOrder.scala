@@ -17,7 +17,10 @@ class CreateOrderImpl[F[_]](
                            )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
   override def apply(order: Order): F[Either[BusinessError, Order]] = for {
     vipAndCredit <- Apply[F].map2(
-      checkIfVip(order.customer),
+      F.redeemWith(customerDao.isVip(order.customer))(
+        recover = _ => F.pure(true),
+        a => F.pure(a)
+      ),
       creditDao.creditLimit(order.customer)
     )((_, _))
     totalCost = costForOrder(order)
@@ -38,13 +41,6 @@ class CreateOrderImpl[F[_]](
 
   private def rejectOrder(error: BusinessError): F[Either[BusinessError, Order]] =
     F.pure(Either.left(CreditLimitExceeded()))
-
-  private def checkIfVip(customer: Customer): F[Boolean] = {
-    F.redeemWith(customerDao.isVip(customer))(
-      recover = _ => F.pure(true),
-      bind = a => F.pure(a)
-    )
-  }
 
   private def costForOrder(order: Order): Long =
     order.orderLines.map(l => l.quantity * l.cost).sum
