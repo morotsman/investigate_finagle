@@ -2,35 +2,23 @@ package com.github.morotsman.about_test
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import cats._
 import cats.implicits._
-import scala.util.Try
+import org.scalamock.scalatest.MockFactory
+
+import scala.util.{Success, Try}
 
 
-class CreateOrderImplTest extends AnyFlatSpec with Matchers {
+class CreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
 
-  class TestCustomerDao() extends CustomerDao[Try] {
-    override def isVip(c: Customer): Try[Boolean] = ???
-  }
+  private val customerDao = mock[CustomerDao[Try]]
 
-  class TestOrderDao() extends OrderDao[Try] {
-    override def createOrder(freeDelivery: Boolean, order: Order): Try[Order] = ???
-  }
+  private val orderDao = mock[OrderDao[Try]]
 
-  class TestCreditDao() extends CreditDao[Try] {
-    override def creditLimit(c: Customer): Try[Credit] = ???
-  }
+  private val creditDao = mock[CreditDao[Try]]
 
-  val customerDao = new TestCustomerDao()
+  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao)
 
-  val orderDao = new TestOrderDao()
-
-  val creditDao = new TestCreditDao()
-
-  val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao)
-
-
-  it should "create an order" in {
+  it should "create an order for VIP customer" in {
     val order: Order = Order(
       orderId = None,
       customer = Customer(
@@ -52,6 +40,25 @@ class CreateOrderImplTest extends AnyFlatSpec with Matchers {
         )
       )
     )
+
+    (customerDao.isVip _).expects(Customer(
+      customerId = "Some id",
+      firstName = "John",
+      lastName = "Doe"
+    )).returning(Try(true))
+
+    (creditDao.creditLimit _).expects(Customer(
+      customerId = "Some id",
+      firstName = "John",
+      lastName = "Doe"
+    )).returning(Try(Credit(500L)))
+
+    val orderId = "someOrderId"
+    (orderDao.createOrder _).expects(true, order).returning(Try(order.copy(orderId = Some(orderId))))
+
+    val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
+
+    result shouldBe Success(Right(order.copy(orderId = Some(orderId))))
   }
 
 }
