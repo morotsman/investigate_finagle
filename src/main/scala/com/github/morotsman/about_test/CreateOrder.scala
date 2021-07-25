@@ -24,14 +24,20 @@ class CreateOrderImpl[F[_]](
     isVip = vipAndCredit._1
     credit = vipAndCredit._2
     o <- if (totalCost < credit.limit) {
-      orderDao.createOrder(
+      createOrder(
         freeDelivery = isVip || totalCost >= freeLimit,
         order
-      ).map(Either.right(_))
+      )
     } else {
-      F.pure(Either.left(CreditLimitExceeded()))
+      rejectOrder(CreditLimitExceeded())
     }
   } yield o
+
+  private def createOrder(freeDelivery: Boolean, o: Order): F[Either[BusinessError, Order]] =
+    orderDao.createOrder(freeDelivery = freeDelivery, o).map(Either.right(_))
+
+  private def rejectOrder(error: BusinessError): F[Either[BusinessError, Order]] =
+    F.pure(Either.left(CreditLimitExceeded()))
 
   private def checkIfVip(customer: Customer): F[Boolean] = {
     F.redeemWith(customerDao.isVip(customer))(
