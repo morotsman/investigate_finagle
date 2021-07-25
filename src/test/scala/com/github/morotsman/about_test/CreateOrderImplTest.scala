@@ -53,12 +53,11 @@ class CreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
       lastName = "Doe"
     )).returning(Try(Credit(500L)))
 
-    val orderId = "someOrderId"
-    (orderDao.createOrder _).expects(true, order).returning(Try(order.copy(orderId = Some(orderId))))
+    (orderDao.createOrder _).expects(true, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
 
     val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
 
-    result shouldBe Success(Right(order.copy(orderId = Some(orderId))))
+    result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
   it should "create an order for a non VIP customer" in {
@@ -96,12 +95,11 @@ class CreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
       lastName = "Doe"
     )).returning(Try(Credit(500L)))
 
-    val orderId = "someOrderId"
-    (orderDao.createOrder _).expects(false, order).returning(Try(order.copy(orderId = Some(orderId))))
+    (orderDao.createOrder _).expects(false, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
 
     val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
 
-    result shouldBe Success(Right(order.copy(orderId = Some(orderId))))
+    result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
   it should "create an order for if an order is below the credit limit" in {
@@ -139,12 +137,11 @@ class CreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
       lastName = "Doe"
     )).returning(Try(Credit(500L)))
 
-    val orderId = "someOrderId"
-    (orderDao.createOrder _).expects(false, order).returning(Try(order.copy(orderId = Some(orderId))))
+    (orderDao.createOrder _).expects(false, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
 
     val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
 
-    result shouldBe Success(Right(order.copy(orderId = Some(orderId))))
+    result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
 }
