@@ -17,10 +17,9 @@ class CreateOrderImpl[F[_]](
                            )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
   override def apply(order: Order): F[Either[BusinessError, Order]] = for {
     vipAndCredit <- Apply[F].map2(
-      F.redeemWith(customerDao.isVip(order.customer))(
-        recover = _ => F.pure(true),
-        a => F.pure(a)
-      ),
+      customerDao.isVip(order.customer).recoverWith {
+        case _: Throwable => F.pure(true)
+      },
       creditDao.creditLimit(order.customer)
     )((_, _))
     totalCost = costForOrder(order)
