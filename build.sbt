@@ -44,6 +44,14 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.3" % "test",
   "org.scalacheck" %% "scalacheck" % "1.15.2" % "test",
   "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2" % "test"
-
 )
+
+val cucumberVersion = "6.10.4"
+val junitVersion = "4.13.2"
+
+libraryDependencies += "io.cucumber" %% "cucumber-scala" % "7.0.0" % Test
+libraryDependencies += "io.cucumber" % "cucumber-junit" % cucumberVersion % Test
+
+libraryDependencies += "junit" % "junit" % junitVersion % Test
+libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test
 
