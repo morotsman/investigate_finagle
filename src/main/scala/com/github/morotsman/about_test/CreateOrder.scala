@@ -2,15 +2,12 @@ package com.github.morotsman.about_test
 
 import cats._
 import cats.implicits._
-import cats.data._
-
-import scala.concurrent.Future
 import scala.language.higherKinds
 
 trait CreateOrder[F[_]] {
   val freeLimit = 1000L
 
-  def apply(order: Order): F[Order]
+  def apply(order: Order): F[Either[BusinessError, Order]]
 }
 
 class CreateOrderImpl[F[_]](
@@ -18,26 +15,34 @@ class CreateOrderImpl[F[_]](
                              customerDao: CustomerDao[F],
                              creditDao: CreditDao[F]
                            )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
-  override def apply(order: Order): F[Order] = for {
+  override def apply(order: Order): F[Either[BusinessError, Order]] = for {
     vipAndCredit <- Apply[F].map2(
       checkIfVip(order.customer),
       creditDao.creditLimit(order.customer)
-    )((_,_))
-    o <- orderDao.createOrder(
-      freeDelivery = vipAndCredit._1 || aboveFreeDeliveryLimit(order),
-      order
-    )
+    )((_, _))
+    totalCost = costForOrder(order)
+    isVip = vipAndCredit._1
+    credit = vipAndCredit._2
+    o <- if (totalCost < credit.limit) {
+      orderDao.createOrder(
+        freeDelivery = isVip || totalCost >= freeLimit,
+        order
+      ).map(Either.right[BusinessError, Order](_))
+    } else {
+      F.pure(Either.left[BusinessError, Order](CreditLimitExceeded()))
+    }
   } yield o
 
   private def checkIfVip(customer: Customer): F[Boolean] = {
     F.redeemWith(customerDao.isVip(customer))(
-      recover = _ => F.pure(true),
+      recover = _ => F.pure(false),
       bind = a => F.pure(a)
     )
   }
 
-  private def aboveFreeDeliveryLimit(order: Order): Boolean =
-    order.orderLines.map(l => l.quantity * l.cost).sum >= freeLimit
+  private def costForOrder(order: Order): Long =
+    order.orderLines.map(l => l.quantity * l.cost).sum
+
 }
 
 trait OrderDao[F[_]] {
@@ -50,6 +55,14 @@ trait CustomerDao[F[_]] {
 
 trait CreditDao[F[_]] {
   def creditLimit(c: Customer): F[Credit]
+}
+
+sealed trait BusinessError {
+  val message: String
+}
+
+case class CreditLimitExceeded() extends BusinessError {
+  override val message: String = "Credit limit exceeded."
 }
 
 case class Order(orderId: Option[String], customer: Customer, address: Address, orderLines: Seq[OrderLine])

@@ -50,14 +50,15 @@ object Main extends App {
       )
     )
   )
-  val startTime = System.currentTimeMillis()
+  try {
+    val startTime = System.currentTimeMillis()
+    val futureResult = CreateOrder(order)
+    val result = Await.result(futureResult,10000 milli)
+    println(s"Got $result in ${System.currentTimeMillis - startTime} ms")
+  } finally {
+    customerContext.shutdown()
+    orderContext.shutdown()
+    creditContext.shutdown()
+  }
 
-  val futureResult: Future[Order] = CreateOrder(order)
-  val result = Await.result(futureResult,10000 milli)
-
-  println(s"Got $result in ${System.currentTimeMillis - startTime} ms")
-
-  customerContext.shutdown()
-  orderContext.shutdown()
-  creditContext.shutdown()
 }
