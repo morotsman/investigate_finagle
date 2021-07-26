@@ -31,7 +31,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
 
   private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, properties)
 
-  it should "create an order for a customer" in {
+  it should "create an order for a ordinary customer" in {
     (customerDao.isVip _).expects(ORDER.customer).returning(IS_NOT_VIP)
 
     (creditDao.creditLimit _).expects(ORDER.customer).returning(creditLimit(LIMIT_500))
