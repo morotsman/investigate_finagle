@@ -39,7 +39,7 @@ class CreateOrderImpl[F[_]](
     orderDao.createOrder(freeDelivery = freeDelivery, o).map(Either.right(_))
 
   private def rejectOrder(error: BusinessError): F[Either[BusinessError, Order]] =
-    F.pure(Either.left(CreditLimitExceeded()))
+    F.pure(Either.left(error))
 
   private def costForOrder(order: Order): Long =
     order.orderLines.map(l => l.quantity * l.cost).sum
