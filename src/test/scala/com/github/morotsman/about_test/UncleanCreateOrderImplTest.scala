@@ -1,6 +1,5 @@
 package com.github.morotsman.about_test
 
-import cats.Id
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import cats.implicits._
@@ -9,7 +8,7 @@ import org.scalamock.scalatest.MockFactory
 import scala.util.{Failure, Success, Try}
 
 
-class CreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
+class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
 
   private val customerDao = mock[CustomerDao[Try]]
 
