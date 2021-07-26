@@ -16,7 +16,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
 
   private val creditDao = mock[CreditDao[Try]]
 
-  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao)
+  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(100L))
 
   it should "create an order for a VIP customer, the shipping should be free" in {
     val order: Order = Order(

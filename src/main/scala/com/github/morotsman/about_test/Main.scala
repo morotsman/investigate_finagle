@@ -27,7 +27,9 @@ object Main extends App {
   }
   val creditDao = new CreditDaoImpl()(creditContext)
 
-  val CreateOrder = new CreateOrderImpl[Future](orderDao, customerDao, creditDao)
+  val properties = Properties(freeLimit = 100)
+
+  val CreateOrder = new CreateOrderImpl[Future](orderDao, customerDao, creditDao, properties)
 
   val order: Order = Order(
     orderId = None,

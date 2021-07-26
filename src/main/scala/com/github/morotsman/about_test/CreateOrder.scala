@@ -5,15 +5,16 @@ import cats.implicits._
 import scala.language.higherKinds
 
 trait CreateOrder[F[_]] {
-  val freeLimit = 100L
-
   def apply(order: Order): F[Either[BusinessError, Order]]
 }
+
+case class Properties(freeLimit: Long)
 
 class CreateOrderImpl[F[_]](
                              orderDao: OrderDao[F],
                              customerDao: CustomerDao[F],
-                             creditDao: CreditDao[F]
+                             creditDao: CreditDao[F],
+                             properties: Properties
                            )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
   override def apply(order: Order): F[Either[BusinessError, Order]] = for {
     vipAndCredit <- Apply[F].map2(
@@ -27,7 +28,7 @@ class CreateOrderImpl[F[_]](
     credit = vipAndCredit._2
     o <- if (totalCost <= credit.limit) {
       createOrder(
-        freeDelivery = isVip || totalCost >= freeLimit,
+        freeDelivery = isVip || totalCost >= properties.freeLimit,
         order
       )
     } else {
