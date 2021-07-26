@@ -16,10 +16,10 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
   private val LIMIT_500 = 500
   private def creditLimit(limit: Int) = Try(Credit(limit))
   private val SERVICE_DOWN_EXCEPTION = new RuntimeException("The service is down")
-  private val ORDER = OrderHelper.createOrder()
   private val FREE_LIMIT = 100
-
-
+  private val ORDER = OrderHelper.createOrder(orderLines = Seq(
+    OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
+  ))
 
   private val customerDao = mock[CustomerDao[Try]]
 
@@ -42,7 +42,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
-  it should "create an order for a VIP customer with free shipping" in {
+  it should "create an order for a VIP customer" in {
     (customerDao.isVip _).expects(ORDER.customer).returning(IS_VIP)
 
     (creditDao.creditLimit _).expects(ORDER.customer).returning(creditLimit(LIMIT_500))
@@ -62,21 +62,6 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     (orderDao.createOrder _).expects(FREE_DELIVERY, ORDER).returning(Try(orderWithId))
 
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
-  }
-
-  it should "create an order for a non VIP customer, the shipping should not be free" in {
-    val order = OrderHelper.createOrder(orderLines = Seq(
-      OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
-    ))
-
-    (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)
-
-    (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
-
-    val orderWithId = order.copy(orderId = Some("someOrderId"))
-    (orderDao.createOrder _).expects(NO_FREE_DELIVERY, order).returning(Try(orderWithId))
-
-    CreateOrder(order) shouldBe Success(Right(orderWithId))
   }
 
   it should "shipping should be free if above free limit" in {
