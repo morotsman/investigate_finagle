@@ -59,7 +59,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
 
     val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
-    (orderDao.createOrder _).expects(FREE_DELIVERY, ORDER).returning(Try(orderWithId))
+    (orderDao.createOrder _).expects(FREE_DELIVERY, *).returning(Try(orderWithId))
 
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
@@ -74,7 +74,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
 
     val orderWithId = order.copy(orderId = Some("someOrderId"))
-    (orderDao.createOrder _).expects(FREE_DELIVERY, order).returning(Try(orderWithId))
+    (orderDao.createOrder _).expects(FREE_DELIVERY, *).returning(Try(orderWithId))
 
     CreateOrder(order) shouldBe Success(Right(orderWithId))
   }

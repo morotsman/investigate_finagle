@@ -16,30 +16,34 @@ class CreateOrderImpl[F[_]](
                              creditDao: CreditDao[F],
                              properties: Properties
                            )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
-  override def apply(order: Order): F[Either[BusinessError, Order]] = for {
-    vipAndCredit <- Apply[F].map2(
-      customerDao.isVip(order.customer).recoverWith {
-        case _: Throwable => F.pure(true)
-      },
-      creditDao.creditLimit(order.customer)
-    )((_, _))
-    totalCost = costForOrder(order)
-    isVip = vipAndCredit._1
-    credit = vipAndCredit._2
-    o <- if (totalCost <= credit.limit) {
-      createOrder(
-        freeDelivery = isVip || totalCost >= properties.freeLimit,
-        order
-      )
-    } else {
-      rejectOrder(CreditLimitExceeded())
-    }
-  } yield o
+  override def apply(order: Order): F[Either[BusinessError, Order]] =
+    for {
+      vipAndCredit <- Apply[F].map2(
+        customerDao.isVip(order.customer).recoverWith {
+          case _: Throwable => F.pure(true)
+        },
+        creditDao.creditLimit(order.customer)
+      )((_, _))
+      totalCost = costForOrder(order)
+      isVip = vipAndCredit._1
+      credit = vipAndCredit._2
+      o <- if (totalCost <= credit.limit) {
+        createOrder(
+          freeDelivery = isVip || totalCost >= properties.freeLimit,
+          order
+        )
+      } else {
+        rejectOrder(CreditLimitExceeded())
+      }
+    } yield o
 
-  private def createOrder(freeDelivery: Boolean, o: Order): F[Either[BusinessError, Order]] =
-    orderDao.createOrder(freeDelivery = freeDelivery, o).map(Either.right(_))
+  private def createOrder(freeDelivery: Boolean, o: Order)
+  : F[Either[BusinessError, Order]] =
+    orderDao.createOrder(freeDelivery = freeDelivery, o)
+      .map(Either.right(_))
 
-  private def rejectOrder(error: BusinessError): F[Either[BusinessError, Order]] =
+  private def rejectOrder(error: BusinessError)
+  : F[Either[BusinessError, Order]] =
     F.pure(Either.left(error))
 
   private def costForOrder(order: Order): Long =
