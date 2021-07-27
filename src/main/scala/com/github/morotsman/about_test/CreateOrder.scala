@@ -8,7 +8,7 @@ trait CreateOrder[F[_]] {
   def apply(order: Order): F[Either[BusinessError, Order]]
 }
 
-case class Properties(freeLimit: Long)
+case class Properties(freeShippingLimit: Long)
 
 class CreateOrderImpl[F[_]](
                              orderDao: OrderDao[F],
@@ -29,7 +29,7 @@ class CreateOrderImpl[F[_]](
       credit = vipAndCredit._2
       o <- if (totalCost <= credit.limit) {
         createOrder(
-          freeDelivery = isVip || totalCost >= properties.freeLimit,
+          freeDelivery = isVip || totalCost >= properties.freeShippingLimit,
           order
         )
       } else {
