@@ -31,7 +31,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
 
   private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, properties)
 
-  it should "create an order for a ordinary customer" in {
+  it should "create an order for an ordinary customer" in {
     (customerDao.isVip _).expects(ORDER.customer).returning(IS_NOT_VIP)
 
     (creditDao.creditLimit _).expects(ORDER.customer).returning(creditLimit(LIMIT_500))
@@ -53,7 +53,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
-  it should "if we temporarily don't know if the customer is vip or not, the shipping should be free" in {
+  it should "if we temporarily don't know if the customer is VIP or not, the shipping should be free" in {
     (customerDao.isVip _).expects(*).returning(Try(throw SERVICE_DOWN_EXCEPTION))
 
     (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
@@ -64,7 +64,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
-  it should "shipping should be free if above free limit" in {
+  it should "shipping should be free the cost is above the free shipping limit" in {
     val order = OrderHelper.createOrder(orderLines = Seq(
       OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT)
     ))

@@ -18,7 +18,49 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
 
   private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(100L))
 
-  it should "create an order for a VIP customer, the shipping should be free" in {
+  it should "create an order for an ordinary customer" in {
+    val order: Order = Order(
+      orderId = None,
+      customer = Customer(
+        customerId = "Some id",
+        firstName = "John",
+        lastName = "Doe"
+      ),
+      address = Address(
+        street = "Some street 42",
+        zipCode = "243221",
+        city = "Malmoe",
+        country = "Sweden"
+      ),
+      orderLines = Seq(
+        OrderLine(
+          itemCode = "1",
+          quantity = 2,
+          cost = 20
+        )
+      )
+    )
+
+    (customerDao.isVip _).expects(Customer(
+      customerId = "Some id",
+      firstName = "John",
+      lastName = "Doe"
+    )).returning(Try(false))
+
+    (creditDao.creditLimit _).expects(Customer(
+      customerId = "Some id",
+      firstName = "John",
+      lastName = "Doe"
+    )).returning(Try(Credit(500L)))
+
+    (orderDao.createOrder _).expects(false, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
+
+    val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
+
+    result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
+  }
+
+  it should "create an order for a VIP customer" in {
     val order: Order = Order(
       orderId = None,
       customer = Customer(
@@ -60,7 +102,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
     result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
-  it should "if we temporarily don't know if the customer is vip or not, the shipping should be free" in {
+  it should "if we temporarily don't know if the customer is VIP or not, the shipping should be free" in {
     val order: Order = Order(
       orderId = None,
       customer = Customer(
@@ -102,7 +144,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
     result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
-  it should "create an order for a non VIP customer, the shipping should not be free" in {
+  it should "shipping should be free the cost is above the free shipping limit" in {
     val order: Order = Order(
       orderId = None,
       customer = Customer(
@@ -120,7 +162,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
         OrderLine(
           itemCode = "1",
           quantity = 2,
-          cost = 20
+          cost = 250
         )
       )
     )
@@ -137,7 +179,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
       lastName = "Doe"
     )).returning(Try(Credit(500L)))
 
-    (orderDao.createOrder _).expects(false, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
+    (orderDao.createOrder _).expects(true, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
 
     val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
 
@@ -224,48 +266,6 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
     val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
 
     result shouldBe Success(Left(CreditLimitExceeded()))
-  }
-
-  it should "shipping should be free if above free limit" in {
-    val order: Order = Order(
-      orderId = None,
-      customer = Customer(
-        customerId = "Some id",
-        firstName = "John",
-        lastName = "Doe"
-      ),
-      address = Address(
-        street = "Some street 42",
-        zipCode = "243221",
-        city = "Malmoe",
-        country = "Sweden"
-      ),
-      orderLines = Seq(
-        OrderLine(
-          itemCode = "1",
-          quantity = 2,
-          cost = 250
-        )
-      )
-    )
-
-    (customerDao.isVip _).expects(Customer(
-      customerId = "Some id",
-      firstName = "John",
-      lastName = "Doe"
-    )).returning(Try(false))
-
-    (creditDao.creditLimit _).expects(Customer(
-      customerId = "Some id",
-      firstName = "John",
-      lastName = "Doe"
-    )).returning(Try(Credit(500L)))
-
-    (orderDao.createOrder _).expects(true, order).returning(Try(order.copy(orderId = Some("someOrderId"))))
-
-    val result: Try[Either[BusinessError, Order]] = CreateOrder(order)
-
-    result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
   it should "fail to create the order if the credit service is down" in {
