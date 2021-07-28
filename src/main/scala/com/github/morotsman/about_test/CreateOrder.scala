@@ -10,7 +10,7 @@ trait CreateOrder[F[_]] {
 
 case class Properties(freeShippingLimit: Long)
 
-class CreateOrderImpl[F[_]](
+final case class CreateOrderImpl[F[_]](
                              orderDao: OrderDao[F],
                              customerDao: CustomerDao[F],
                              creditDao: CreditDao[F],
