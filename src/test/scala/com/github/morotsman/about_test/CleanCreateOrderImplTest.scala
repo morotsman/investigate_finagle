@@ -31,7 +31,7 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
 
   private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, properties)
 
-  it should "create an order for an ordinary customer" in {
+  it should "create orders" in {
     (customerDao.isVip _).expects(ORDER.customer).returning(IS_NOT_VIP)
 
     (creditDao.creditLimit _).expects(ORDER.customer).returning(creditLimit(LIMIT_500))
@@ -42,13 +42,24 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
-  it should "create an order for a VIP customer" in {
-    (customerDao.isVip _).expects(ORDER.customer).returning(IS_VIP)
+  it should "create an order for an ordinary customer" in {
+    (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)
 
-    (creditDao.creditLimit _).expects(ORDER.customer).returning(creditLimit(LIMIT_500))
+    (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
 
     val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
-    (orderDao.createOrder _).expects(FREE_DELIVERY, ORDER).returning(Try(orderWithId))
+    (orderDao.createOrder _).expects(NO_FREE_DELIVERY, *).returning(Try(orderWithId))
+
+    CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
+  }
+
+  it should "create an order for a VIP customer" in {
+    (customerDao.isVip _).expects(*).returning(IS_VIP)
+
+    (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
+
+    val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
+    (orderDao.createOrder _).expects(FREE_DELIVERY, *).returning(Try(orderWithId))
 
     CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
