@@ -51,6 +51,6 @@ object Helpers {
     cost = cost
   )
 
-  def creditLimit(limit: Int) = Try(Credit(limit))
+  def creditLimit(limit: Int): Try[Credit] = Try(Credit(limit))
 
 }
