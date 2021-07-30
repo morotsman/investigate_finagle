@@ -25,7 +25,7 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInst
     val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
     (orderDao.createOrder _).expects(NO_FREE_DELIVERY, *).returning(Try(orderWithId))
 
-    CreateOrder(ORDER)
+    CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
   it should "ship the order for free, if the customer is a VIP" in {
@@ -34,7 +34,7 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInst
     val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
     (orderDao.createOrder _).expects(FREE_DELIVERY, *).returning(Try(orderWithId))
 
-    CreateOrder(ORDER)
+    CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
   it should "ship the order for free, if we can't determine if the customer is VIP or not" in {
@@ -56,7 +56,7 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInst
     val orderWithId = order.copy(orderId = Some("someOrderId"))
     (orderDao.createOrder _).expects(FREE_DELIVERY, *).returning(Try(orderWithId))
 
-    CreateOrder(order)
+    CreateOrder(order) shouldBe Success(Right(orderWithId))
   }
 
 }
