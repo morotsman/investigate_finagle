@@ -3,7 +3,7 @@ package com.github.morotsman.about_test.create_order
 import cats.implicits._
 import com.github.morotsman.about_test._
 import com.github.morotsman.about_test.create_order.Constants._
-import com.github.morotsman.about_test.create_order.Helpers.creditLimit
+import com.github.morotsman.about_test.create_order.Helpers._
 import org.scalatest.OneInstancePerTest
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -20,7 +20,7 @@ class OrderServiceDownTest extends AnyFlatSpec with Matchers with Mocks with One
   it should "fail if the order service is down" in {
     (orderDao.createOrder _).expects(*, *).returning(Try(throw SERVICE_DOWN_EXCEPTION))
 
-    CreateOrder(HAPPY_FLOW_ORDER) shouldBe Failure(SERVICE_DOWN_EXCEPTION)
+    CreateOrder(createOrder()) shouldBe Failure(SERVICE_DOWN_EXCEPTION)
   }
 
 }

@@ -18,7 +18,7 @@ class CreditServiceDownTest extends AnyFlatSpec with Matchers with Mocks with On
   it should "fail if the credit service is down" in {
     (creditDao.creditLimit _).expects(*).returning(Try(throw SERVICE_DOWN_EXCEPTION))
 
-    CreateOrder(HAPPY_FLOW_ORDER) shouldBe Failure(SERVICE_DOWN_EXCEPTION)
+    CreateOrder(createOrder()) shouldBe Failure(SERVICE_DOWN_EXCEPTION)
   }
 
 }
