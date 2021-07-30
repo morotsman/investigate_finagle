@@ -17,8 +17,7 @@ class CreditLimitTest extends AnyFlatSpec with Matchers with Mocks {
 
   it should "create an order if the cost is below the credit limit" in {
     val order = OrderHelper.createOrder(orderLines = Seq(
-      OrderHelper.createOrderLine(quantity = 1, cost = LIMIT_500 / 2),
-      OrderHelper.createOrderLine(quantity = 1, cost = LIMIT_500 / 2),
+      OrderHelper.createOrderLine(quantity = 1, cost = LIMIT_500)
     ))
 
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)

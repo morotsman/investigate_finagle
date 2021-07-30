@@ -3,11 +3,10 @@ package com.github.morotsman.about_test.create_order
 import cats.implicits._
 import com.github.morotsman.about_test._
 import com.github.morotsman.about_test.create_order.Constants._
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 class CreditServiceDownTest extends AnyFlatSpec with Matchers with Mocks {
   private def creditLimit(limit: Int) = Try(Credit(limit))

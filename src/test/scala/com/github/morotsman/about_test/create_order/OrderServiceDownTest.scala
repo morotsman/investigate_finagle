@@ -3,7 +3,6 @@ package com.github.morotsman.about_test.create_order
 import cats.implicits._
 import com.github.morotsman.about_test._
 import com.github.morotsman.about_test.create_order.Constants._
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
