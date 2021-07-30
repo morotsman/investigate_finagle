@@ -8,7 +8,7 @@ import org.scalatest.OneInstancePerTest
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInstancePerTest {
   private val ORDER = Helpers.createOrder(orderLines = Seq(
@@ -43,7 +43,7 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInst
     val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
     (orderDao.createOrder _).expects(FREE_DELIVERY, *).returning(Try(orderWithId))
 
-    CreateOrder(ORDER)
+    CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
   }
 
   it should "ship the order for free, if the cost is above the free shipping limit" in {
