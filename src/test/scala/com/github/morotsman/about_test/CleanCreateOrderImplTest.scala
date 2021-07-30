@@ -7,7 +7,6 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Failure, Success, Try}
 
-
 class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactory {
   private val IS_VIP = Try(true)
   private val IS_NOT_VIP = Try(false)

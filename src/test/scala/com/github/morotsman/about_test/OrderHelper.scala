@@ -2,6 +2,18 @@ package com.github.morotsman.about_test
 
 object OrderHelper {
 
+  def createOrder(
+                   orderId: Option[String] = None,
+                   customer: Customer = createCustomer(),
+                   address: Address = createAddress(),
+                   orderLines: Seq[OrderLine] = Seq(createOrderLine())
+                 ): Order = Order(
+    orderId = orderId,
+    customer = customer,
+    address = address,
+    orderLines = orderLines
+  )
+
   def createCustomer(
                       customerId: String = "Some id",
                       firstName: String = "John",
@@ -32,18 +44,6 @@ object OrderHelper {
     itemCode = itemCode,
     quantity = quantity,
     cost = cost
-  )
-
-  def createOrder(
-                   orderId: Option[String] = None,
-                   customer: Customer = createCustomer(),
-                   address: Address = createAddress(),
-                   orderLines: Seq[OrderLine] = Seq(createOrderLine())
-                 ): Order = Order(
-    orderId = orderId,
-    customer = customer,
-    address = address,
-    orderLines = orderLines
   )
 
 }
