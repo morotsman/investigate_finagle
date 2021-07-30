@@ -17,8 +17,8 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
   private def creditLimit(limit: Int) = Try(Credit(limit))
   private val SERVICE_DOWN_EXCEPTION = new RuntimeException("The service is down")
   private val FREE_LIMIT = 100
-  private val ORDER = OrderHelper.createOrder(orderLines = Seq(
-    OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
+  private val ORDER = Helpers.createOrder(orderLines = Seq(
+    Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
   ))
 
   private val customerDao = mock[CustomerDao[Try]]
@@ -76,8 +76,8 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
   }
 
   it should "ship the order for free, if the cost is above the free shipping limit" in {
-    val order = OrderHelper.createOrder(orderLines = Seq(
-      OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT)
+    val order = Helpers.createOrder(orderLines = Seq(
+      Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT)
     ))
 
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)
@@ -91,9 +91,9 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
   }
 
   it should "create an order if the cost is below the credit limit" in {
-    val order = OrderHelper.createOrder(orderLines = Seq(
-      OrderHelper.createOrderLine(quantity = 1, cost = LIMIT_500 / 2),
-      OrderHelper.createOrderLine(quantity = 1, cost = LIMIT_500 / 2),
+    val order = Helpers.createOrder(orderLines = Seq(
+      Helpers.createOrderLine(quantity = 1, cost = LIMIT_500 / 2),
+      Helpers.createOrderLine(quantity = 1, cost = LIMIT_500 / 2),
     ))
 
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)
@@ -107,8 +107,8 @@ class CleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFactor
   }
 
   it should "reject an order if the cost is above the credit limit" in {
-    val order = OrderHelper.createOrder(orderLines = Seq(
-      OrderHelper.createOrderLine(quantity = 1, cost = LIMIT_500 + 1)
+    val order = Helpers.createOrder(orderLines = Seq(
+      Helpers.createOrderLine(quantity = 1, cost = LIMIT_500 + 1)
     ))
 
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)

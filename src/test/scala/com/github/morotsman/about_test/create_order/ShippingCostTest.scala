@@ -3,15 +3,15 @@ package com.github.morotsman.about_test.create_order
 import cats.implicits._
 import com.github.morotsman.about_test._
 import com.github.morotsman.about_test.create_order.Constants._
+import com.github.morotsman.about_test.create_order.Helpers.creditLimit
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Success, Try}
 
 class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks {
-  private def creditLimit(limit: Int) = Try(Credit(limit))
-  private val ORDER = OrderHelper.createOrder(orderLines = Seq(
-    OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
+  private val ORDER = Helpers.createOrder(orderLines = Seq(
+    Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
   ))
 
   private val properties = Properties(FREE_LIMIT)
@@ -52,8 +52,8 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks {
   }
 
   it should "ship the order for free, if the cost is above the free shipping limit" in {
-    val order = OrderHelper.createOrder(orderLines = Seq(
-      OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT)
+    val order = Helpers.createOrder(orderLines = Seq(
+      Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT)
     ))
 
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)

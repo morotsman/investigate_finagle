@@ -1,9 +1,11 @@
 package com.github.morotsman.about_test.create_order
 
 import com.github.morotsman.about_test.create_order.Constants.FREE_LIMIT
-import com.github.morotsman.about_test.{Address, Customer, Order, OrderLine}
+import com.github.morotsman.about_test.{Address, Credit, Customer, Order, OrderLine}
 
-object OrderHelper {
+import scala.util.Try
+
+object Helpers {
 
   def createOrder(
                    orderId: Option[String] = None,
@@ -48,5 +50,7 @@ object OrderHelper {
     quantity = quantity,
     cost = cost
   )
+
+  def creditLimit(limit: Int) = Try(Credit(limit))
 
 }
