@@ -1,6 +1,6 @@
 package com.github.morotsman.about_test.create_order
 
-import com.github.morotsman.about_test.create_order.Constants.FREE_LIMIT
+import com.github.morotsman.about_test.create_order.Constants.FREE_SHIPPING_LIMIT
 import com.github.morotsman.about_test.{Address, Credit, Customer, Order, OrderLine}
 
 import scala.util.Try
@@ -44,7 +44,7 @@ object Helpers {
   def createOrderLine(
                        itemCode: String = "1",
                        quantity: Int = 1,
-                       cost: Int = FREE_LIMIT - 1
+                       cost: Int = FREE_SHIPPING_LIMIT - 1
                      ): OrderLine = OrderLine(
     itemCode = itemCode,
     quantity = quantity,

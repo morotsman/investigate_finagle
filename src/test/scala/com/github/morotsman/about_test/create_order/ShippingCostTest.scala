@@ -12,10 +12,10 @@ import scala.util.{Success, Try}
 
 class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInstancePerTest {
   private val ORDER = Helpers.createOrder(orderLines = Seq(
-    Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
+    Helpers.createOrderLine(quantity = 1, cost = FREE_SHIPPING_LIMIT - 1)
   ))
 
-  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(FREE_LIMIT))
+  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(FREE_SHIPPING_LIMIT))
 
   (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
 
@@ -48,7 +48,7 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInst
 
   it should "ship the order for free, if the cost is above the free shipping limit" in {
     val order = Helpers.createOrder(orderLines = Seq(
-      Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT)
+      Helpers.createOrderLine(quantity = 1, cost = FREE_SHIPPING_LIMIT)
     ))
 
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)

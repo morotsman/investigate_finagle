@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers
 import scala.util.{Success, Try}
 
 class CreditLimitTest extends AnyFlatSpec with Matchers with Mocks with OneInstancePerTest {
-  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(FREE_LIMIT))
+  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(FREE_SHIPPING_LIMIT))
 
   (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)
 
