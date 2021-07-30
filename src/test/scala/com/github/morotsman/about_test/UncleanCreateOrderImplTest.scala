@@ -102,7 +102,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
     result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
-  it should "if we temporarily don't know if the customer is VIP or not, the shipping should be free" in {
+  it should "ship the order for free if we can't determine if the customer is VIP or not" in {
     val order: Order = Order(
       orderId = None,
       customer = Customer(
@@ -144,7 +144,7 @@ class UncleanCreateOrderImplTest extends AnyFlatSpec with Matchers with MockFact
     result shouldBe Success(Right(order.copy(orderId = Some("someOrderId"))))
   }
 
-  it should "shipping should be free the cost is above the free shipping limit" in {
+  it should "ship the order for free, if the cost is above the free shipping limit" in {
     val order: Order = Order(
       orderId = None,
       customer = Customer(
