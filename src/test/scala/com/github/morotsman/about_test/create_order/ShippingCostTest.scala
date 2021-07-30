@@ -19,7 +19,7 @@ class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInst
 
   (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
 
-  it should "create an order for an ordinary customer" in {
+  it should "add a shipping cost, if the total cost is below the free shipping limit" in {
     (customerDao.isVip _).expects(*).returning(IS_NOT_VIP)
 
     val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
