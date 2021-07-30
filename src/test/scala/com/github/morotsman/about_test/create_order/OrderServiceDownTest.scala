@@ -10,9 +10,6 @@ import scala.util.{Failure, Try}
 
 class OrderServiceDownTest extends AnyFlatSpec with Matchers with Mocks {
   private def creditLimit(limit: Int) = Try(Credit(limit))
-  private val ORDER = OrderHelper.createOrder(orderLines = Seq(
-    OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
-  ))
 
   private val properties = Properties(FREE_LIMIT)
 
@@ -25,7 +22,7 @@ class OrderServiceDownTest extends AnyFlatSpec with Matchers with Mocks {
 
     (orderDao.createOrder _).expects(*, *).returning(Try(throw SERVICE_DOWN_EXCEPTION))
 
-    CreateOrder(ORDER) shouldBe Failure(SERVICE_DOWN_EXCEPTION)
+    CreateOrder(HAPPY_FLOW_ORDER) shouldBe Failure(SERVICE_DOWN_EXCEPTION)
   }
 
 }

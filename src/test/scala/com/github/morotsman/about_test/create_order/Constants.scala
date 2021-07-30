@@ -10,4 +10,5 @@ object Constants {
   val LIMIT_500 = 500
   val FREE_LIMIT = 100
   val SERVICE_DOWN_EXCEPTION = new RuntimeException("The service is down")
+  val HAPPY_FLOW_ORDER = OrderHelper.createOrder()
 }

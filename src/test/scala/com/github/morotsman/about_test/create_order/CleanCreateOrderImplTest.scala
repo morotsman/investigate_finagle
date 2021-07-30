@@ -1,7 +1,7 @@
 package com.github.morotsman.about_test.create_order
 
 import cats.implicits._
-import com.github.morotsman.about_test.{CreateOrderImpl, Credit, CreditDao, CreditLimitExceeded, CustomerDao, OrderDao, OrderHelper, Properties}
+import com.github.morotsman.about_test.{CreateOrderImpl, Credit, CreditDao, CreditLimitExceeded, CustomerDao, OrderDao, Properties}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

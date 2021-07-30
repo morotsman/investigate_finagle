@@ -10,23 +10,20 @@ import scala.util.{Success, Try}
 
 class HappyFlowTest extends AnyFlatSpec with Matchers with Mocks {
   private def creditLimit(limit: Int) = Try(Credit(limit))
-  private val ORDER = OrderHelper.createOrder(orderLines = Seq(
-    OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
-  ))
 
   private val properties = Properties(FREE_LIMIT)
 
   private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, properties)
 
   it should "create order - happy flow " in {
-    (customerDao.isVip _).expects(ORDER.customer).returning(IS_NOT_VIP)
+    (customerDao.isVip _).expects(HAPPY_FLOW_ORDER.customer).returning(IS_NOT_VIP)
 
-    (creditDao.creditLimit _).expects(ORDER.customer).returning(creditLimit(LIMIT_500))
+    (creditDao.creditLimit _).expects(HAPPY_FLOW_ORDER.customer).returning(creditLimit(LIMIT_500))
 
-    val orderWithId = ORDER.copy(orderId = Some("someOrderId"))
-    (orderDao.createOrder _).expects(NO_FREE_DELIVERY, ORDER).returning(Try(orderWithId))
+    val orderWithId = HAPPY_FLOW_ORDER.copy(orderId = Some("someOrderId"))
+    (orderDao.createOrder _).expects(NO_FREE_DELIVERY, HAPPY_FLOW_ORDER).returning(Try(orderWithId))
 
-    CreateOrder(ORDER) shouldBe Success(Right(orderWithId))
+    CreateOrder(HAPPY_FLOW_ORDER) shouldBe Success(Right(orderWithId))
   }
 
 }

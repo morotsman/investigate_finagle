@@ -1,4 +1,7 @@
-package com.github.morotsman.about_test
+package com.github.morotsman.about_test.create_order
+
+import com.github.morotsman.about_test.create_order.Constants.FREE_LIMIT
+import com.github.morotsman.about_test.{Address, Customer, Order, OrderLine}
 
 object OrderHelper {
 
@@ -38,8 +41,8 @@ object OrderHelper {
 
   def createOrderLine(
                        itemCode: String = "1",
-                       quantity: Int = 2,
-                       cost: Int = 20
+                       quantity: Int = 1,
+                       cost: Int = FREE_LIMIT - 1
                      ): OrderLine = OrderLine(
     itemCode = itemCode,
     quantity = quantity,
