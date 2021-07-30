@@ -3,20 +3,13 @@ package com.github.morotsman.about_test.create_order
 import cats.implicits._
 import com.github.morotsman.about_test._
 import com.github.morotsman.about_test.create_order.Constants._
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Success, Try}
 
-class CreditLimitTest extends AnyFlatSpec with Matchers with MockFactory {
+class CreditLimitTest extends AnyFlatSpec with Matchers with Mocks {
   private def creditLimit(limit: Int) = Try(Credit(limit))
-
-  private val customerDao = mock[CustomerDao[Try]]
-
-  private val orderDao = mock[OrderDao[Try]]
-
-  private val creditDao = mock[CreditDao[Try]]
 
   private val properties = Properties(FREE_LIMIT)
 

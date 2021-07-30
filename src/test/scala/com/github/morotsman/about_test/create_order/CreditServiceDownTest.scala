@@ -9,17 +9,11 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Failure, Success, Try}
 
-class CreditServiceDownTest extends AnyFlatSpec with Matchers with MockFactory {
+class CreditServiceDownTest extends AnyFlatSpec with Matchers with Mocks {
   private def creditLimit(limit: Int) = Try(Credit(limit))
   private val ORDER = OrderHelper.createOrder(orderLines = Seq(
     OrderHelper.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
   ))
-
-  private val customerDao = mock[CustomerDao[Try]]
-
-  private val orderDao = mock[OrderDao[Try]]
-
-  private val creditDao = mock[CreditDao[Try]]
 
   private val properties = Properties(FREE_LIMIT)
 
