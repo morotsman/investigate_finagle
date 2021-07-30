@@ -8,16 +8,14 @@ import org.scalatest.OneInstancePerTest
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.util.{Success, Try}
+import scala.util.Try
 
 class ShippingCostTest extends AnyFlatSpec with Matchers with Mocks with OneInstancePerTest {
   private val ORDER = Helpers.createOrder(orderLines = Seq(
     Helpers.createOrderLine(quantity = 1, cost = FREE_LIMIT - 1)
   ))
 
-  private val properties = Properties(FREE_LIMIT)
-
-  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, properties)
+  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(FREE_LIMIT))
 
   (creditDao.creditLimit _).expects(*).returning(creditLimit(LIMIT_500))
 

@@ -10,9 +10,7 @@ import org.scalatest.matchers.should.Matchers
 import scala.util.{Success, Try}
 
 class HappyFlowTest extends AnyFlatSpec with Matchers with Mocks {
-  private val properties = Properties(FREE_LIMIT)
-
-  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, properties)
+  private val CreateOrder = new CreateOrderImpl[Try](orderDao, customerDao, creditDao, Properties(FREE_LIMIT))
 
   it should "create order - happy flow " in {
     (customerDao.isVip _).expects(HAPPY_FLOW_ORDER.customer).returning(IS_NOT_VIP)
