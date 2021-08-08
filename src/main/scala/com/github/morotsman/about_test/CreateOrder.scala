@@ -11,19 +11,19 @@ trait CreateOrder[F[_]] {
 case class Properties(freeShippingLimit: Long)
 
 final case class CreateOrderImpl[F[_]](
-                             orderDao: OrderDao[F],
-                             customerDao: CustomerDao[F],
-                             creditDao: CreditDao[F],
-                             properties: Properties
-                           )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
+                                        orderDao: OrderDao[F],
+                                        customerDao: CustomerDao[F],
+                                        creditDao: CreditDao[F],
+                                        properties: Properties
+                                      )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
   override def apply(order: Order): F[Either[BusinessError, Order]] =
     for {
       vipAndCredit <- (
-        customerDao.isVip(order.customer).recoverWith {
-          case _: Throwable => F.pure(true)
+        customerDao.isVip(order.customer).recover {
+          case _: Throwable => true
         },
         creditDao.creditLimit(order.customer)
-      ).mapN((_, _))
+        ).mapN((_, _))
       totalCost = costForOrder(order)
       isVip = vipAndCredit._1
       credit = vipAndCredit._2
