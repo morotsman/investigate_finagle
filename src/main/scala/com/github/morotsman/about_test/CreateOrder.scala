@@ -18,16 +18,16 @@ final case class CreateOrderImpl[F[_]](
                            )(implicit F: MonadError[F, Throwable]) extends CreateOrder[F] {
   override def apply(order: Order): F[Either[BusinessError, Order]] =
     for {
-      vipAndCredit <- Apply[F].map2(
+      vipAndCredit <- (
         customerDao.isVip(order.customer).recoverWith {
           case _: Throwable => F.pure(true)
         },
         creditDao.creditLimit(order.customer)
-      )((_, _))
+      ).mapN((_, _))
       totalCost = costForOrder(order)
       isVip = vipAndCredit._1
       credit = vipAndCredit._2
-      o <- if (totalCost <= credit.limit) {
+      createdOrder <- if (totalCost <= credit.limit) {
         createOrder(
           freeDelivery = isVip || totalCost >= properties.freeShippingLimit,
           order
@@ -35,7 +35,7 @@ final case class CreateOrderImpl[F[_]](
       } else {
         rejectOrder(CreditLimitExceeded())
       }
-    } yield o
+    } yield createdOrder
 
   private def createOrder(freeDelivery: Boolean, o: Order)
   : F[Either[BusinessError, Order]] =
